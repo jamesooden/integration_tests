@@ -7,6 +7,7 @@ from wrapanapi import exceptions
 
 from cfme import js
 from cfme.base.login import BaseLoggedInPage
+from cfme.common.vm_console import VMConsole
 from cfme.exceptions import (
     VmOrInstanceNotFound, TemplateNotFound, OptionNotAvailable, UnknownProviderType)
 from cfme.fixtures import pytest_selenium as sel
@@ -31,6 +32,7 @@ from widgetastic_patternfly import Button, BootstrapSelect
 
 from . import PolicyProfileAssignable, Taggable, SummaryMixin
 
+access_btn = partial(toolbar.select, "Access")
 cfg_btn = partial(toolbar.select, "Configuration")
 lcl_btn = partial(toolbar.select, "Lifecycle")
 mon_btn = partial(toolbar.select, 'Monitoring')
@@ -237,6 +239,25 @@ class BaseVM(Pretty, Updateable, PolicyProfileAssignable, Taggable, SummaryMixin
         else:
             raise ValueError("{} is not a known state for compliance".format(text))
 
+    @property
+    def console_handle(self):
+        '''
+        The basic algorithm for getting the consoles window handle is to get the
+        appliances window handle and then iterate through the window_handles till we find
+        one that is not the appliances window handle.   Once we find this check that it has
+        a canvas widget with a specific ID
+        '''
+        browser = self.appliance.browser.widgetastic
+        appliance_handle = browser.window_handle
+        cur_handles = browser.selenium.window_handles
+        logger.info("Current Window Handles:  {}".format(cur_handles))
+
+        for handle in browser.selenium.window_handles:
+            if handle != appliance_handle:
+                # XXX: Add code to verify the tab has the correct widget
+                #      for a console tab.
+                return handle
+
     def delete(self, cancel=False, from_details=False):
         """Deletes the VM/Instance from the VMDB.
 
@@ -341,6 +362,48 @@ class BaseVM(Pretty, Updateable, PolicyProfileAssignable, Taggable, SummaryMixin
             return InfoBlock.icon_href(*properties)
         else:
             return InfoBlock.text(*properties)
+
+    def open_console(self, console='VM Console', invokes_alert=False, cancel=False):
+        """
+        Initiates the opening of one of the console types supported by the Access
+        button.   Presently we only support VM Console, which is the HTML5 Console.
+
+        Args:
+            console       - one of the supported console types given by the Access button.
+            invokes_alert - If the particular console will invoke a CFME popup/alert
+                            setting this to true will handle this.
+            cancel        - Allows one to cancel the operation if the pope/alert occurs.
+        """
+        # TODO: implement vmrc vm console
+        if console not in ['VM Console']:
+            raise NotImplementedError('Not supported console type: {}'.format(console))
+
+        navigate_to(self, 'Details')
+
+        # Click console button given by type
+        access_btn(console, invokes_alert=invokes_alert)
+
+        # Some access types in the future may require a CFME popup be
+        # handled.  The one that is supported now does not require this,
+        # and hence the default is not do this.
+        if invokes_alert:
+            sel.handle_alert(cancel)
+
+        # Get the consoles window handle, and then create a VMConsole object, and store
+        # the VMConsole object aside.
+        console_handle = self.console_handle
+        appliance_handle = self.appliance.browser.widgetastic.window_handle
+        logger.info("Creating VMConsole:")
+        logger.info("   appliance_handle: {}".format(appliance_handle))
+        logger.info("     console_handle: {}".format(console_handle))
+        logger.info("               name: {}".format(self.name))
+        vm_console = VMConsole(
+            appliance_handle=appliance_handle,
+            selenium=self.appliance.browser.widgetastic.selenium,
+            console_handle=console_handle,
+            name=self.name
+        )
+        self.vm_console = vm_console
 
     def open_details(self, properties=None):
         """Clicks on details infoblock"""
