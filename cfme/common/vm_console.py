@@ -3,7 +3,10 @@
 
 import base64
 import re
+import tempfile
 
+from PIL import Image
+from pytesseract import image_to_string
 from utils.log import logger
 from utils.pretty import Pretty
 from wait_for import wait_for
@@ -93,6 +96,25 @@ class VMConsole(Pretty):
 
         self.switch_to_appliance()
         return image_png
+
+    def get_screen_text(self):
+        '''
+        Return the text from a text console.   Uses OCR to scrape
+        the text from the console image taken at the time of the call.
+        '''
+        image_str = self.get_screen()
+
+        # Write the image string to a file as pytesseract requires
+        # a file, and doesn't take a string.
+        tmp_file = tempfile.NamedTemporaryFile()
+        tmp_file.write(image_str)
+        tmp_file.flush()
+        tmp_file_name = tmp_file.name
+        text = image_to_string(Image.open(tmp_file_name))
+        tmp_file.close()
+
+        logger.info('screen text:{}'.format(text))
+        return text
 
     def is_connected(self):
         '''

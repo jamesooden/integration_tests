@@ -82,6 +82,12 @@ def test_html5_vm_console(appliance, provider, vm_obj):
     screen = vm_console.get_screen()
     assert imghdr.what('', screen) == 'png'
 
+    #
+    # Try to get the login screen text.   We should have the text
+    # login there:
+    console_text = vm_console.get_screen_text()
+    assert re.match("login:", console_text)
+
     # Try to login:
     # XXX: This is hard coded, we need to add some new yaml to track the
     #      template credentials.
