@@ -8,9 +8,12 @@ from utils.log import logger
 from utils.pretty import Pretty
 from wait_for import wait_for
 
+from cfme.cloud.provider.openstack import OpenStackProvider
+
 banner_id = 'noVNC_status'
 canvas_id = 'noVNC_canvas'
 ctrl_alt_del_id = 'sendCtrlAltDelButton'
+connection_status_xpath = '//*[@id="connection-status"]'
 
 class VMConsole(Pretty):
     """
@@ -33,7 +36,15 @@ class VMConsole(Pretty):
         Gets the text of the banner above the console screen.
         '''
         self.switch_to_console()
-        text = self.selenium.find_element_by_id(banner_id).text
+        if not self.provider.one_of(OpenStackProvider):
+            try:
+                text = self.selenium.find_element_by_xpath(connection_status_xpath).text
+            except:
+                # TODO: Need to find better way to handle the error here
+                # Because page loading takes time before it could find the element
+                text = 'Element not Available yet'
+        else:
+            text = self.selenium.find_element_by_id(banner_id).text
         logger.info('Read following text from console banner: {}'.format(text))
         self.switch_to_appliance()
         return text
@@ -124,4 +135,3 @@ class VMConsole(Pretty):
         wait_for(func=lambda: self.is_connected(),
                  delay=1,
                  num_sec=timeout)
-
