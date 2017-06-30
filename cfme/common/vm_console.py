@@ -18,11 +18,12 @@ class VMConsole(Pretty):
     """
     pretty_attrs = ['appliance_handle', 'browser', 'console_handle', 'name']
 
-    def __init__(self, name, selenium, console_handle, appliance_handle):
+    def __init__(self, name, selenium, console_handle, appliance_handle, provider):
         self.name = name
         self.selenium = selenium
         self.console_handle = console_handle
         self.appliance_handle = appliance_handle
+        self.provider = provider
 
     ###
     # Methods

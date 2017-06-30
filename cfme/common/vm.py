@@ -401,7 +401,8 @@ class BaseVM(Pretty, Updateable, PolicyProfileAssignable, Taggable, SummaryMixin
             appliance_handle=appliance_handle,
             selenium=self.appliance.browser.widgetastic.selenium,
             console_handle=console_handle,
-            name=self.name
+            name=self.name,
+            provider=self.provider
         )
         self.vm_console = vm_console
 
