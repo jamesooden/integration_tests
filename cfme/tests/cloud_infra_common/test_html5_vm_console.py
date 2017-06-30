@@ -27,7 +27,7 @@ def vm_obj(request, provider, setup_provider, small_template, vm_name):
     @request.addfinalizer
     def _delete_vm():
         try:
-            vm_obj.delete_from_provider()#replacing with more appropriate method
+            vm_obj.delete_from_provider()
         except Exception:
             logger.warning("Failed to delete vm `{}`.".format(vm_obj.name))
 
