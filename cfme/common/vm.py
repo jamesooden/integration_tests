@@ -367,6 +367,10 @@ class BaseVM(Pretty, Updateable, PolicyProfileAssignable, Taggable, SummaryMixin
         """
         Initiates the opening of one of the console types supported by the Access
         button.   Presently we only support VM Console, which is the HTML5 Console.
+        In case of VMware provider it could be VMRC, VNC/HTML5, WebMKS, but we only
+        support VNC/HTML5.
+        Possible values for 'console' could be 'VM Console' and 'Web Console', but Web
+        Console is not supported as well.
 
         Args:
             console       - one of the supported console types given by the Access button.
