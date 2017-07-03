@@ -10,10 +10,10 @@ from wait_for import wait_for
 
 from cfme.cloud.provider.openstack import OpenStackProvider
 
-banner_id = 'noVNC_status'
+banner_id = 'noVNC_status' # specific for RHOS Provider
 canvas_id = 'noVNC_canvas'
 ctrl_alt_del_id = 'sendCtrlAltDelButton'
-connection_status_xpath = '//*[@id="connection-status"]'
+connection_status_xpath = '//*[@id="connection-status"]' # specific for the VMware/RHEV Provider
 
 class VMConsole(Pretty):
     """
@@ -31,23 +31,30 @@ class VMConsole(Pretty):
     ###
     # Methods
     #
+    def get_openstack_banner(self):
+        text = self.selenium.find_element_by_id(banner_id).text
+        return text
+
+
+    def get_vmware_rhev_connection_status_text(self):
+        text = self.selenium.find_element_by_xpath(connection_status_xpath).text
+        return text
+
     def get_banner(self):
         '''
         Gets the text of the banner above the console screen.
         '''
         self.switch_to_console()
-        if not self.provider.one_of(OpenStackProvider):
-            try:
-                text = self.selenium.find_element_by_xpath(connection_status_xpath).text
-            except:
-                # TODO: Need to find better way to handle the error here
-                # Because page loading takes time before it could find the element
-                text = 'Element not Available yet'
+        if self.provider.one_of(OpenStackProvider):
+            text = self.get_openstack_banner()
         else:
-            text = self.selenium.find_element_by_id(banner_id).text
+            text = self.get_vmware_rhev_connection_status_text()
         logger.info('Read following text from console banner: {}'.format(text))
         self.switch_to_appliance()
         return text
+
+
+
 
     def get_screen(self):
         '''
@@ -127,7 +134,7 @@ class VMConsole(Pretty):
         logger.info("Switching to console: window handle = {}".format(self.console_handle))
         self.selenium.switch_to_window(self.console_handle)
 
-    def wait_for_connect(self, timeout=5):
+    def wait_for_connect(self, timeout=15):
         '''
         Wait's for as long as the specified/default timeout for the console to
         be connected.
