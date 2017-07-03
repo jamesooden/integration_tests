@@ -139,6 +139,10 @@ class VMConsole(Pretty):
         Wait's for as long as the specified/default timeout for the console to
         be connected.
         '''
-        wait_for(func=lambda: self.is_connected(),
-                 delay=1,
-                 num_sec=timeout)
+        try:
+            wait_for(func=lambda: self.is_connected(),
+                     delay=1,
+                     num_sec=timeout)
+            return True
+        except:
+            return False

@@ -74,12 +74,9 @@ def test_html5_vm_console(appliance, provider, vm_obj):
 
     vm_console = vm_obj.vm_console
 
-    # If the console is healthy, it should connect.
-    vm_console.wait_for_connect()
-
-    # In this case I want to test that we can get banner text without an error.
-    # This tests that the element is there, not what is in the banner.
-    vm_console.get_banner()
+    # If the banner/connection-status element exists we can get
+    # the connection status text and if the console is healthy, it should connect.
+    assert vm_console.wait_for_connect() is True, "VM Console did not reach 'connected' state"
 
     # Get the login screen image, and make sure it is a png file:
     screen = vm_console.get_screen()
